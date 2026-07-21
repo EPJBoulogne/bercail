@@ -8,10 +8,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#151A23",
+        ink: "#000000",
         paper: "#EEF0F3",
-        accent: "#3E63DD",
-        "accent-soft": "#E4E9FC",
+        accent: "#FF5E5B",
+        "accent-soft": "#FFE6E5",
+        gold: "#F3C677",
+        "gold-soft": "#FDF3E2",
         success: "#1F9D67",
         danger: "#D64545",
         warning: "#C98A1F",
