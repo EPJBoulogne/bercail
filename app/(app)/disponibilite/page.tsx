@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addUnavailability, deleteUnavailability } from "./actions";
-import { PageBanner } from "@/components/PageBanner";
+
 
 export default async function DisponibilitePage() {
   const supabase = await createClient();
@@ -19,8 +19,6 @@ export default async function DisponibilitePage() {
     .select("id, start_date, end_date, profiles(name)")
     .order("start_date");
   return (
-    <>
-      <PageBanner />
       <div className="p-6 md:p-8 max-w-lg">
         <h1 className="font-display text-xl font-semibold mb-1">Disponibilité</h1>
         <p className="text-sm text-gray-500 mb-6">
@@ -90,6 +88,5 @@ export default async function DisponibilitePage() {
           )}
         </div>
       </div>
-    </>
   );
 }
