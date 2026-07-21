@@ -1,0 +1,12 @@
+import { SkeletonRows } from "@/components/Skeleton";
+
+export default function Loading() {
+  return (
+    <div className="p-6 md:p-8">
+      <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-6" />
+      <div className="max-w-xl">
+        <SkeletonRows count={4} />
+      </div>
+    </div>
+  );
+}
