@@ -3,13 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { AccountMenu } from "@/components/AccountMenu";
+import { PageBanner } from "@/components/PageBanner";
 
-// Toutes les pages sous ce layout (Tableau de bord, Calendrier,
-// Départements, Utilisateurs, etc.) lisent des données propres à
-// l'utilisateur connecté et changent souvent — on désactive tout cache
-// pour être sûr d'afficher l'état réel à chaque visite, plutôt que de
-// dépendre du comportement par défaut de Next.js qui met en cache les
-// appels réseau (y compris ceux de Supabase) de façon assez agressive.
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({
@@ -21,36 +16,33 @@ export default async function AppLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("name, system_role, status")
     .eq("id", user.id)
     .single();
-
   if (!profile || profile.status !== "active") redirect("/en-attente");
-
   const { data: memberships } = await supabase
     .from("department_members")
     .select("departments(is_worship)")
     .eq("user_id", user.id);
-
   const isWorshipMember =
     profile.system_role === "admin" ||
     (memberships ?? []).some((m: any) => m.departments?.is_worship);
-
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <Sidebar isWorshipMember={isWorshipMember} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-end gap-3 px-6 py-3 border-b border-gray-200 bg-white">
-          <AccountMenu name={profile.name} role={profile.system_role} />
-        </header>
-        <main className="flex-1 pb-16 md:pb-0">{children}</main>
+    <>
+      <PageBanner />
+      <div className="min-h-screen flex flex-col md:flex-row">
+        <Sidebar isWorshipMember={isWorshipMember} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="flex items-center justify-end gap-3 px-6 py-3 border-b border-gray-200 bg-white">
+            <AccountMenu name={profile.name} role={profile.system_role} />
+          </header>
+          <main className="flex-1 pb-16 md:pb-0">{children}</main>
+        </div>
+        <MobileNav isWorshipMember={isWorshipMember} />
       </div>
-      <MobileNav isWorshipMember={isWorshipMember} />
-    </div>
+    </>
   );
 }

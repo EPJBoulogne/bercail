@@ -61,7 +61,6 @@ export function SongOccurrencesFilter({
             </button>
           )}
         </div>
-        </div>
         <div>
           <label className="block text-[10px] uppercase text-gray-500 mb-1">Gamme</label>
           <select
