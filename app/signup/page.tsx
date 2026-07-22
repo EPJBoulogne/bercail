@@ -25,8 +25,6 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    // Pas de "created_by_admin" ici : le trigger côté base place
-    // automatiquement ce compte en statut "pending".
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -57,8 +55,8 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-6">
-        <div className="w-full max-w-sm text-center">
+      <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
+        <div className="w-full max-w-sm text-center bg-white rounded-2xl p-8 shadow-sm">
           <h1 className="font-display text-2xl font-semibold mb-4">
             Bercail<span className="text-accent">.</span>
           </h1>
@@ -73,8 +71,8 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-8 shadow-sm">
         <h1 className="font-display text-2xl font-semibold text-center mb-2">
           Bercail<span className="text-accent">.</span>
         </h1>

@@ -18,8 +18,8 @@ export default async function EnAttentePage() {
   if (profile?.status === "active") redirect("/");
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm text-center">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
+      <div className="w-full max-w-sm text-center bg-white rounded-2xl p-8 shadow-sm">
         <h1 className="font-display text-2xl font-semibold mb-4">
           Bercail<span className="text-accent">.</span>
         </h1>

@@ -26,8 +26,6 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-    // Fonctionne parce que le lien qui a mené ici (via /auth/callback)
-    // a déjà établi une session temporaire pour cet utilisateur.
     const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
@@ -41,8 +39,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-8 shadow-sm">
         <h1 className="font-display text-2xl font-semibold text-center mb-2">
           Bercail<span className="text-accent">.</span>
         </h1>
