@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           <EventCard
             key={e.id}
             event={e}
-            currentUserId={user.id}
+            currentUserId={user!.id}
             canManage={canManage}
             unavailability={unavailability ?? []}
             roles={departmentsMap.get(e.department_id)?.roles ?? []}
