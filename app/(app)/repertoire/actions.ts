@@ -74,9 +74,13 @@ export async function syncFromPortail() {
   try {
     response = await fetch(`${url}?token=${encodeURIComponent(token)}`, {
       cache: "no-store",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
     });
-  } catch {
-    throw new Error("Impossible de contacter portail.yt.");
+  } catch (e) {
+    throw new Error(`Impossible de contacter portail.yt (${e instanceof Error ? e.message : "erreur réseau"}).`);
   }
   if (!response.ok) {
     throw new Error(`portail.yt a répondu une erreur (${response.status}).`);
