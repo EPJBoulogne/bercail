@@ -53,8 +53,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
+    <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-8 shadow-sm">
         <h1 className="font-display text-2xl font-semibold text-center mb-8">
           Bercail<span className="text-accent">.</span>
         </h1>
@@ -71,14 +71,9 @@ export default function LoginPage() {
             />
           </div>
           <div>
-          <div className="flex justify-between items-center">
             <label className="block text-xs uppercase text-gray-500 mb-1">
               Mot de passe
             </label>
-            <Link href="/forgot-password" className="text-xs text-accent underline">
-              Mot de passe oublié ?
-            </Link>
-          </div>
             <input
               type="password"
               required
@@ -86,6 +81,11 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
+            <div className="text-right mt-1">
+              <Link href="/forgot-password" className="text-xs text-accent underline">
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </div>
 
           {error && <p className="text-sm text-danger">{error}</p>}
