@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { createSetlist } from "@/app/(app)/listes/actions";
+import { normalizeSearch } from "@/lib/normalizeSearch";
 
 type Song = { id: string; title: string; song_key: string | null };
 type EventOption = { id: string; title: string; date: string };
@@ -26,10 +27,10 @@ export function CreateSetlistWizard({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const filteredSongs = useMemo(
-    () => songs.filter((s) => s.title.toLowerCase().includes(search.toLowerCase())),
-    [songs, search]
-  );
+  const filteredSongs = useMemo(() => {
+  const q = normalizeSearch(search);
+  return songs.filter((s) => normalizeSearch(s.title).includes(q));
+}, [songs, search]);
 
   function toggleSong(id: string) {
     setSelected((prev) =>
