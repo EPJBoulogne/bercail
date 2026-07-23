@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import Script from "next/script";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -14,16 +13,6 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const captchaToken = useRef<string | null>(null);
-
-  useEffect(() => {
-    (window as any).onTurnstileSuccess = (token: string) => {
-      captchaToken.current = token;
-    };
-    (window as any).onTurnstileExpired = () => {
-      captchaToken.current = null;
-    };
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,10 +20,6 @@ export default function SignupPage() {
 
     if (password.length < 8) {
       setError("Le mot de passe doit faire au moins 8 caractères.");
-      return;
-    }
-    if (!captchaToken.current) {
-      setError("Merci de patienter quelques instants (vérification de sécurité en cours), puis réessayez.");
       return;
     }
 
@@ -46,7 +31,6 @@ export default function SignupPage() {
       options: {
         data: { name, phone },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        captchaToken: captchaToken.current,
       },
     });
 
@@ -55,15 +39,13 @@ export default function SignupPage() {
       if (signUpError.message.toLowerCase().includes("already registered")) {
         setError("Un compte existe déjà avec cet email.");
       } else if (signUpError.message.toLowerCase().includes("captcha")) {
-        setError("La vérification de sécurité a échoué. Merci de réessayer.");
+        setError(
+          "Le CAPTCHA est encore activé côté Supabase mais aucun n'est affiché ici — désactivez-le dans Authentication → Attack Protection, ou dites-le-moi pour qu'on l'intègre correctement."
+        );
       } else {
         setError(`Erreur : ${signUpError.message}`);
       }
       setLoading(false);
-      if ((window as any).turnstile) {
-        (window as any).turnstile.reset();
-      }
-      captchaToken.current = null;
       return;
     }
 
@@ -90,7 +72,6 @@ export default function SignupPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent via-[#F3897F] to-gold">
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <div className="w-full max-w-sm bg-white rounded-2xl p-8 shadow-sm">
         <h1 className="font-display text-2xl font-semibold text-center mb-2">
           Bercail<span className="text-accent">.</span>
@@ -146,14 +127,7 @@ export default function SignupPage() {
             />
           </div>
 
-          <div
-            className="cf-turnstile"
-            data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-            data-callback="onTurnstileSuccess"
-            data-expired-callback="onTurnstileExpired"
-          />
-
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-danger mb-2">{error}</p>}
 
           <button
             type="submit"

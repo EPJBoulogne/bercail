@@ -20,9 +20,9 @@ export default async function ListesPage() {
 
   const { data: songs } = await supabase
     .from("songs")
-    .select("id, title, song_key")
+    .select("id, title, song_key, lyrics")
     .order("title");
-
+    
   const { data: events } = await supabase
     .from("events")
     .select("id, title, date")

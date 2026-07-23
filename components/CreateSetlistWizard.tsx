@@ -4,9 +4,11 @@ import { useState, useTransition, useMemo } from "react";
 import { createSetlist } from "@/app/(app)/listes/actions";
 import { normalizeSearch } from "@/lib/normalizeSearch";
 
-type Song = { id: string; title: string; song_key: string | null };
+type Song = { id: string; title: string; song_key: string | null; lyrics: string | null };
 type EventOption = { id: string; title: string; date: string };
 type Member = { id: string; name: string };
+
+const MAX_LYRICS_MATCHES = 4;
 
 export function CreateSetlistWizard({
   songs,
@@ -27,10 +29,26 @@ export function CreateSetlistWizard({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const filteredSongs = useMemo(() => {
-  const q = normalizeSearch(search);
-  return songs.filter((s) => normalizeSearch(s.title).includes(q));
-}, [songs, search]);
+  const { titleMatches, lyricsMatches } = useMemo(() => {
+    const q = normalizeSearch(search);
+    if (!q) return { titleMatches: songs, lyricsMatches: [] as Song[] };
+
+    const titleMatches = songs.filter((s) => normalizeSearch(s.title).includes(q));
+    const titleMatchIds = new Set(titleMatches.map((s) => s.id));
+    // Même règle que sur Répertoire : un mot isolé trop courant
+    // noierait les résultats, on ne cherche dans les paroles qu'à
+    // partir d'une phrase d'au moins deux mots.
+    const lyricsMatches =
+      q.trim().split(/\s+/).length >= 2
+        ? songs
+            .filter(
+              (s) => !titleMatchIds.has(s.id) && s.lyrics && normalizeSearch(s.lyrics).includes(q)
+            )
+            .slice(0, MAX_LYRICS_MATCHES)
+        : [];
+
+    return { titleMatches, lyricsMatches };
+  }, [songs, search]);
 
   function toggleSong(id: string) {
     setSelected((prev) =>
@@ -68,6 +86,22 @@ export function CreateSetlistWizard({
     });
   }
 
+  function renderSongCheckbox(s: Song) {
+    return (
+      <label key={s.id} className="flex items-center gap-2 text-sm py-1">
+        <input
+          type="checkbox"
+          checked={selected.includes(s.id)}
+          onChange={() => toggleSong(s.id)}
+        />
+        {s.title}
+        {s.song_key && (
+          <span className="text-gray-400 font-mono text-xs">— {s.song_key}</span>
+        )}
+      </label>
+    );
+  }
+
   return (
     <>
       <button
@@ -102,29 +136,26 @@ export function CreateSetlistWizard({
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un chant…"
+                  placeholder="Rechercher un chant, ou une phrase des paroles…"
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mb-2"
                 />
                 <div className="border border-gray-200 rounded-md p-2 max-h-56 overflow-y-auto space-y-1">
-                  {filteredSongs.map((s) => (
-                    <label key={s.id} className="flex items-center gap-2 text-sm py-1">
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(s.id)}
-                        onChange={() => toggleSong(s.id)}
-                      />
-                      {s.title}
-                      {s.song_key && (
-                        <span className="text-gray-400 font-mono text-xs">
-                          — {s.song_key}
-                        </span>
-                      )}
-                    </label>
-                  ))}
-                  {filteredSongs.length === 0 && (
+                  {titleMatches.map(renderSongCheckbox)}
+                  {titleMatches.length === 0 && lyricsMatches.length === 0 && (
                     <p className="text-xs text-gray-500">Aucun chant.</p>
                   )}
                 </div>
+
+                {lyricsMatches.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-[10px] uppercase text-gray-400 mb-1">
+                      Aussi trouvé dans les paroles de…
+                    </p>
+                    <div className="border border-gray-200 rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                      {lyricsMatches.map(renderSongCheckbox)}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 pt-4">
                   <button
