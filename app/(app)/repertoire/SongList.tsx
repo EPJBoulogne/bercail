@@ -11,6 +11,7 @@ type Song = {
   chords: string | null;
   lyrics: string | null;
   reference_url: string | null;
+  portail_ref: number | null;
 };
 
 function SongRow({ song }: { song: Song }) {
@@ -23,9 +24,11 @@ function SongRow({ song }: { song: Song }) {
         )}
       </span>
       <SongViewButton
+        songId={song.id}
         title={song.title}
         chords={song.chords}
         referenceUrl={song.reference_url}
+        portailRef={song.portail_ref}
       />
     </div>
   );
@@ -40,10 +43,6 @@ export function SongList({ songs }: { songs: Song[] }) {
 
     const titleMatches = songs.filter((s) => normalizeSearch(s.title).includes(q));
     const titleMatchIds = new Set(titleMatches.map((s) => s.id));
-    // Une phrase distinctive retrouve le bon chant ; un mot isolé trop
-    // courant ("Dieu", "gloire"...) noierait les résultats — on ne
-    // cherche donc dans les paroles qu'à partir de quelques mots,
-    // jamais sur un seul mot très fréquent dans ce type de répertoire.
     const lyricsMatches =
       q.trim().split(/\s+/).length >= 2
         ? songs.filter(

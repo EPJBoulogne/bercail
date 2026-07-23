@@ -15,6 +15,13 @@ export function GenerateLyricsButton({
 
   async function handleClick() {
     setGenerating(true);
+
+    // Ouvert tout de suite, pendant que le clic est encore "frais" pour
+    // Safari iOS — sinon le chargement asynchrone de jsPDF ci-dessous lui
+    // fait perdre le lien avec le geste utilisateur, et il bloque le
+    // téléchargement silencieusement (jamais de message d'erreur).
+    const previewWindow = window.open("", "_blank");
+
     const { jsPDF } = await import("jspdf");
 
     const fix = (t: string) => t.replace(/œ/g, "oe").replace(/Œ/g, "OE");
@@ -115,12 +122,19 @@ export function GenerateLyricsButton({
       });
 
     const dataUri = doc.output("datauristring");
-    const link = document.createElement("a");
-    link.href = dataUri;
-    link.download = `${setlistName.replace(/[^a-z0-9]+/gi, "_") || "liste"}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    if (previewWindow) {
+      previewWindow.location.href = dataUri;
+    } else {
+      // L'onglet n'a pas pu s'ouvrir (bloqueur de popup malgré tout) :
+      // on retente le téléchargement classique en dernier recours.
+      const link = document.createElement("a");
+      link.href = dataUri;
+      link.download = `${setlistName.replace(/[^a-z0-9]+/gi, "_") || "liste"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
     setGenerating(false);
   }

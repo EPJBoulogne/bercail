@@ -27,9 +27,14 @@ export default async function SetlistDetailPage({
 
   const { data: items } = await supabase
     .from("setlist_items")
-    .select("id, song_key, songs(id, title, lyrics)")
+    .select("id, song_key, songs(id, title, lyrics, chords, reference_url, portail_ref)")
     .eq("setlist_id", id)
     .order("position");
+
+  const { data: allSongs } = await supabase
+    .from("songs")
+    .select("id, title, song_key, lyrics")
+    .order("title");
 
   const event = (setlist as any).events;
   const lead = (setlist as any).profiles;
@@ -55,7 +60,11 @@ export default async function SetlistDetailPage({
         </p>
       </div>
 
-      <SetlistItemsEditor setlistId={setlist.id} initialItems={(items ?? []) as any} />
+      <SetlistItemsEditor
+        setlistId={setlist.id}
+        initialItems={(items ?? []) as any}
+        allSongs={allSongs ?? []}
+      />
 
       <div className="mt-6">
         <GenerateLyricsButton setlistName={setlist.name} items={pdfItems} />

@@ -14,6 +14,7 @@ const config: Config = {
         "accent-soft": "#FFE6E5",
         gold: "#F3C677",
         "gold-soft": "#FDF3E2",
+	"gold-dark": "#854F0B",
         success: "#1F9D67",
         danger: "#D64545",
         warning: "#C98A1F",

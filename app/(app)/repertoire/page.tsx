@@ -20,7 +20,7 @@ export default async function RepertoirePage() {
 
   const { data: songs } = await supabase
     .from("songs")
-    .select("id, title, song_key, chords, lyrics, reference_url")
+    .select("id, title, song_key, chords, lyrics, reference_url, portail_ref")
     .order("title");
 
   return (
