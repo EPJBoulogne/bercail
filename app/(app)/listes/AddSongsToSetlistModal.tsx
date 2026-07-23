@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { addSongsToSetlist } from "./actions";
 import { normalizeSearch } from "@/lib/normalizeSearch";
 
 type Song = { id: string; title: string; song_key: string | null; lyrics: string | null };
@@ -12,12 +11,14 @@ export function AddSongsToSetlistModal({
   existingSongIds,
   open,
   onClose,
+  onAdd,
 }: {
   setlistId: string;
   allSongs: Song[];
   existingSongIds: string[];
   open: boolean;
   onClose: () => void;
+  onAdd: (songIds: string[]) => Promise<void>;
 }) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -52,10 +53,9 @@ export function AddSongsToSetlistModal({
 
   function handleSubmit() {
     startTransition(async () => {
-      await addSongsToSetlist(setlistId, selected);
+      await onAdd(selected);
       setSearch("");
       setSelected([]);
-      onClose();
     });
   }
 

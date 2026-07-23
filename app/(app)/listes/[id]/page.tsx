@@ -33,7 +33,7 @@ export default async function SetlistDetailPage({
 
   const { data: allSongs } = await supabase
     .from("songs")
-    .select("id, title, song_key, lyrics")
+    .select("id, title, song_key, lyrics, chords, reference_url, portail_ref")
     .order("title");
 
   const event = (setlist as any).events;

@@ -49,10 +49,6 @@ export async function createSetlist(formData: FormData) {
 export async function reorderSetlistItems(setlistId: string, orderedItemIds: string[]) {
   const supabase = await createClient();
 
-  // Deux passes nécessaires à cause de la contrainte UNIQUE (setlist_id,
-  // position) : on déplace d'abord tout vers des positions temporaires
-  // négatives (garanties uniques), pour éviter toute collision pendant
-  // que les vraies positions se chevauchent momentanément.
   const tempResults = await Promise.all(
     orderedItemIds.map((id, i) =>
       supabase.from("setlist_items").update({ position: -(i + 1) }).eq("id", id)
@@ -120,8 +116,12 @@ export async function addSongsToSetlist(setlistId: string, songIds: string[]) {
     song_key: keyMap.get(songId) || "C",
   }));
 
-  const { error } = await supabase.from("setlist_items").insert(items);
+  const { data: inserted, error } = await supabase
+    .from("setlist_items")
+    .insert(items)
+    .select("id, song_key, song_id");
   if (error) throw new Error(error.message);
 
   revalidatePath(`/listes/${setlistId}`);
+  return inserted ?? [];
 }

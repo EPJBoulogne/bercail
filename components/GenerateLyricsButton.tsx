@@ -121,21 +121,18 @@ export function GenerateLyricsButton({
         y += 8;
       });
 
-    const dataUri = doc.output("datauristring");
+    const blobUrl = doc.output("bloburl") as unknown as string;
 
     if (previewWindow) {
-      previewWindow.location.href = dataUri;
+      previewWindow.location.href = blobUrl;
     } else {
-      // L'onglet n'a pas pu s'ouvrir (bloqueur de popup malgré tout) :
-      // on retente le téléchargement classique en dernier recours.
       const link = document.createElement("a");
-      link.href = dataUri;
+      link.href = blobUrl;
       link.download = `${setlistName.replace(/[^a-z0-9]+/gi, "_") || "liste"}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
-
     setGenerating(false);
   }
 

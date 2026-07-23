@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { reorderSetlistItems, updateItemKey, deleteSetlistItem } from "./actions";
+import { reorderSetlistItems, updateItemKey, deleteSetlistItem, addSongsToSetlist } from "./actions";
 import { SongViewButton } from "@/components/SongViewButton";
 import { AddSongsToSetlistModal } from "./AddSongsToSetlistModal";
 
@@ -14,6 +14,16 @@ type Item = {
   songs: { id: string; title: string; chords: string | null; reference_url: string | null; portail_ref: number | null } | null;
 };
 
+type AllSong = {
+  id: string;
+  title: string;
+  song_key: string | null;
+  lyrics: string | null;
+  chords: string | null;
+  reference_url: string | null;
+  portail_ref: number | null;
+};
+
 export function SetlistItemsEditor({
   setlistId,
   initialItems,
@@ -21,7 +31,7 @@ export function SetlistItemsEditor({
 }: {
   setlistId: string;
   initialItems: Item[];
-  allSongs: { id: string; title: string; song_key: string | null; lyrics: string | null }[];
+  allSongs: AllSong[];
 }) {
   const [items, setItems] = useState(initialItems);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -75,6 +85,28 @@ export function SetlistItemsEditor({
       return next;
     });
     setPendingDelete(null);
+  }
+
+  async function handleAddSongs(songIds: string[]) {
+    const inserted = await addSongsToSetlist(setlistId, songIds);
+    const newItems: Item[] = inserted.map((row: any) => {
+      const song = allSongs.find((s) => s.id === row.song_id);
+      return {
+        id: row.id,
+        song_key: row.song_key,
+        songs: song
+          ? {
+              id: song.id,
+              title: song.title,
+              chords: song.chords,
+              reference_url: song.reference_url,
+              portail_ref: song.portail_ref,
+            }
+          : null,
+      };
+    });
+    setItems((prev) => [...prev, ...newItems]);
+    setAddModalOpen(false);
   }
 
   const existingSongIds = items.map((i) => i.songs?.id).filter(Boolean) as string[];
@@ -152,6 +184,7 @@ export function SetlistItemsEditor({
         existingSongIds={existingSongIds}
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
+        onAdd={handleAddSongs}
       />
     </div>
   );
