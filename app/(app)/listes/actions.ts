@@ -49,9 +49,13 @@ export async function createSetlist(formData: FormData) {
 export async function reorderSetlistItems(setlistId: string, orderedItemIds: string[]) {
   const supabase = await createClient();
 
+  // Décalage large mais fixe (100000) plutôt que -1, -2, -3… : garantit
+  // que ces positions temporaires ne collisionnent jamais avec de vraies
+  // positions (jamais aussi grandes pour une liste de chants), tout en
+  // restant largement dans les limites d'un entier Postgres.
   const tempResults = await Promise.all(
     orderedItemIds.map((id, i) =>
-      supabase.from("setlist_items").update({ position: -(i + 1) }).eq("id", id)
+      supabase.from("setlist_items").update({ position: -(100000 + i) }).eq("id", id)
     )
   );
   const tempError = tempResults.find((r) => r.error)?.error;

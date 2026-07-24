@@ -16,10 +16,6 @@ export function GenerateLyricsButton({
   async function handleClick() {
     setGenerating(true);
 
-    // Ouvert tout de suite, pendant que le clic est encore "frais" pour
-    // Safari iOS — sinon le chargement asynchrone de jsPDF ci-dessous lui
-    // fait perdre le lien avec le geste utilisateur, et il bloque le
-    // téléchargement silencieusement (jamais de message d'erreur).
     const previewWindow = window.open("", "_blank");
 
     const { jsPDF } = await import("jspdf");
@@ -84,6 +80,26 @@ export function GenerateLyricsButton({
       }
     }
 
+    // Mesure la hauteur totale qu'un chant va occuper (titre, gamme,
+    // toutes ses lignes de paroles), pour pouvoir décider de sauter à
+    // la colonne/page suivante AVANT de commencer à l'imprimer, plutôt
+    // que de le couper en plein milieu.
+    function measureItemHeight(item: Item): number {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      const titleLineCount = doc.splitTextToSize(fix(item.title), colW).length;
+      let h = titleLineCount * 13 + 4 + 12;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      (item.lyrics ?? "").split("\n").forEach((rawLine) => {
+        const wrappedCount = doc.splitTextToSize(fix(rawLine) || " ", colW).length;
+        h += wrappedCount * 13;
+      });
+      h += 8;
+      return h;
+    }
+
     drawFurniture(true);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
@@ -97,13 +113,38 @@ export function GenerateLyricsButton({
     items
       .filter((i) => i.lyrics)
       .forEach((item) => {
-        ensureSpace(16);
+        const neededHeight = measureItemHeight(item);
+        const columnHeight = pageH - bottom - colTop;
+
+        // Le chant tient dans une colonne fraîche mais pas dans l'espace
+        // restant ici : on saute directement plutôt que de le couper.
+        if (y + neededHeight > pageH - bottom && neededHeight <= columnHeight) {
+          if (col === 0) {
+            col = 1;
+            x = rightX;
+            y = colTop;
+          } else {
+            newPage();
+          }
+        }
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);
-        doc.text(fix(item.title), x, y);
-        doc.setLineWidth(0.7);
-        doc.line(x, y + 2, x + doc.getTextWidth(fix(item.title)), y + 2);
-        y += 13;
+        const titleLines: string[] = doc.splitTextToSize(fix(item.title), colW);
+        let lastTitleY = y;
+        let lastTitleLine = "";
+        titleLines.forEach((tLine) => {
+          ensureSpace(16);
+          doc.text(tLine, x, y);
+          lastTitleY = y;
+          lastTitleLine = tLine;
+          y += 13;
+        });
+        doc.setDrawColor(0);
+        doc.setLineWidth(1);
+        doc.line(x, lastTitleY + 3, x + doc.getTextWidth(lastTitleLine), lastTitleY + 3);
+        y += 4;
+
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.setTextColor(100);
@@ -113,10 +154,14 @@ export function GenerateLyricsButton({
         doc.setTextColor(0);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
-        (item.lyrics ?? "").split("\n").forEach((line) => {
-          ensureSpace(13);
-          doc.text(fix(line) || " ", x, y);
-          y += 13;
+
+        (item.lyrics ?? "").split("\n").forEach((rawLine) => {
+          const wrapped: string[] = doc.splitTextToSize(fix(rawLine) || " ", colW);
+          wrapped.forEach((wLine) => {
+            ensureSpace(13);
+            doc.text(wLine, x, y);
+            y += 13;
+          });
         });
         y += 8;
       });
@@ -133,6 +178,7 @@ export function GenerateLyricsButton({
       link.click();
       document.body.removeChild(link);
     }
+
     setGenerating(false);
   }
 

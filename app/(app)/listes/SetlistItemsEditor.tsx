@@ -7,6 +7,7 @@ import { AddSongsToSetlistModal } from "./AddSongsToSetlistModal";
 
 const keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const UNDO_DELAY = 5000;
+const SWIPE_DISMISS_THRESHOLD = 80;
 
 type Item = {
   id: string;
@@ -41,6 +42,9 @@ export function SetlistItemsEditor({
   const [pendingDelete, setPendingDelete] = useState<{ item: Item; index: number } | null>(null);
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [swipeX, setSwipeX] = useState(0);
+  const swipeStartX = useRef<number | null>(null);
+
   function handleDrop(targetId: string) {
     if (!draggedId || draggedId === targetId) return;
     const next = [...items];
@@ -66,6 +70,7 @@ export function SetlistItemsEditor({
     const index = items.findIndex((i) => i.id === item.id);
     setItems((prev) => prev.filter((i) => i.id !== item.id));
     setPendingDelete({ item, index });
+    setSwipeX(0);
 
     if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
     deleteTimerRef.current = setTimeout(() => {
@@ -85,6 +90,31 @@ export function SetlistItemsEditor({
       return next;
     });
     setPendingDelete(null);
+  }
+
+  // Balayer le toast le masque, mais ne touche pas au minuteur de
+  // suppression déjà lancé : "je ne veux plus voir ce message", pas
+  // "annule le message mais garde le chant".
+  function dismissToast() {
+    setPendingDelete(null);
+  }
+
+  function handleSwipeStart(clientX: number) {
+    swipeStartX.current = clientX;
+  }
+
+  function handleSwipeMove(clientX: number) {
+    if (swipeStartX.current === null) return;
+    setSwipeX(clientX - swipeStartX.current);
+  }
+
+  function handleSwipeEnd() {
+    if (Math.abs(swipeX) > SWIPE_DISMISS_THRESHOLD) {
+      dismissToast();
+    } else {
+      setSwipeX(0);
+    }
+    swipeStartX.current = null;
   }
 
   async function handleAddSongs(songIds: string[]) {
@@ -170,9 +200,24 @@ export function SetlistItemsEditor({
       </div>
 
       {pendingDelete && (
-        <div className="mb-6 flex items-center justify-between bg-gray-800 text-white text-sm rounded-md px-3 py-2 -mt-3">
+        <div
+          onPointerDown={(e) => handleSwipeStart(e.clientX)}
+          onPointerMove={(e) => handleSwipeMove(e.clientX)}
+          onPointerUp={handleSwipeEnd}
+          onPointerCancel={handleSwipeEnd}
+          style={{
+            transform: `translateX(${swipeX}px)`,
+            opacity: Math.max(1 - Math.abs(swipeX) / 200, 0.2),
+            touchAction: "pan-y",
+          }}
+          className="mb-6 flex items-center justify-between bg-gray-800 text-white text-sm rounded-md px-3 py-2 -mt-3 cursor-grab select-none"
+        >
           <span>« {pendingDelete.item.songs?.title} » retiré</span>
-          <button onClick={handleUndo} className="underline text-accent-soft">
+          <button
+            onClick={handleUndo}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="underline text-accent-soft"
+          >
             Annuler
           </button>
         </div>
